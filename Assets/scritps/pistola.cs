@@ -2,27 +2,58 @@ using UnityEngine;
 
 public class pistola : MonoBehaviour
 {
-    public Transform gun;              // hijo que actúa como pistola
-    public float sideX = 0.5f;         // distancia a la derecha (+X)
-    private float lastDirection = 1f;  // 1 = derecha, -1 = izquierda
+    public GameObject bulletPrefab;
+    public Transform muzzle;
+
+    public Transform posDerecha;   // empty a la derecha del player
+    public Transform posIzquierda; // empty a la izquierda del player
+
+    private bool mirandoDerecha = true;
 
     void Update()
     {
-        // Detectar dirección simple con teclas
-        float dir = 0f;
+        float inputX = Input.GetAxisRaw("Horizontal");
 
-        if (UnityEngine.InputSystem.Keyboard.current.rightArrowKey.isPressed)
-            dir = 1f;
-        else if (UnityEngine.InputSystem.Keyboard.current.leftArrowKey.isPressed)
-            dir = -1f;
-
-        if (dir != 0f && dir != lastDirection)
+        // detectar cambio de dirección
+        if (inputX > 0 && !mirandoDerecha)
         {
-            // Cambiar lado reflejando la X
-            gun.localPosition = new Vector3(sideX * dir, gun.localPosition.y, gun.localPosition.z);
+            mirandoDerecha = true;
+            CambiarLado();
+        }
+        else if (inputX < 0 && mirandoDerecha)
+        {
+            mirandoDerecha = false;
+            CambiarLado();
+        }
 
-            // Guardar nueva dirección
-            lastDirection = dir;
+        // disparo con Z
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            Shoot();
         }
     }
+
+    void CambiarLado()
+    {
+        if (mirandoDerecha)
+        {
+            transform.position = posDerecha.position;
+            transform.rotation = posDerecha.rotation;
+        }
+        else
+        {
+            transform.position = posIzquierda.position;
+            transform.rotation = posIzquierda.rotation;
+        }
+    }
+
+    void Shoot()
+    {
+        GameObject bulletObj = Instantiate(bulletPrefab, muzzle.position, Quaternion.identity);
+        Bullet3D bullet = bulletObj.GetComponent<Bullet3D>();
+
+        Vector3 dir = mirandoDerecha ? Vector3.right : Vector3.left;
+        bullet.SetDirection(dir);
+    }
+
 }
